@@ -3,18 +3,7 @@ import sys
 from PySide2 import QtCore, QtWidgets, QtGui, QtWebEngineWidgets
 import argparse
 import signal
-
-
-
-class WebApp:
-    def __init__(self, title, url):
-        self.url = url
-        self.title = title
-
-apps = []
-apps.append(WebApp("hackernews", "https://news.ycombinator.com"))
-apps.append(WebApp("tildes", "https://tildes.net"))
-
+from src.webappmanager import initDB, getWebapps, getWebapp, addWebApp
 
 
 class WebAppBrowser(QtWidgets.QWidget):
@@ -45,47 +34,61 @@ class AppSelector(QtWidgets.QWidget):
             self.app_buttons.append(button)
 
 
+class AddWAPDialog(QtWidgets.QWidget):
+    def __init__(self):
+        super().__init__()
+        self.nameField = QtWidgets.QLineEdit()
+        self.titleField = QtWidgets.QLineEdit()
+        self.urlField = QtWidgets.QLineEdit()
+        self.button = QtWidgets.QPushButton("Add Webapp")
+        self.layout = QtWidgets.QVBoxLayout(self)
+        self.layout.addWidget(self.nameField)
+        self.layout.addWidget(self.titleField)
+        self.layout.addWidget(self.urlField)
+        self.layout.addWidget(self.button)
+        self.button.clicked.connect(self.add_wap)
+
+    @QtCore.Slot()
+    def add_wap(self):
+        wap_id = self.nameField.text()
+        title = self.titleField.text()
+        url = self.urlField.text()
+        addWebApp(wap_id, title, url)
+        print("added")
+        self.close()
+
+
 class MainWindow(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
 
-        self.appSelector = AppSelector(apps)
-        self.button = QtWidgets.QPushButton("Click me!")
-        self.urlbar = QtWidgets.QLineEdit()
-        self.urlbar.setText("https://news.ycombinator.com")
+        self.appSelector = AppSelector(getWebapps())
+        self.button = QtWidgets.QPushButton("Add WAP!")
 
         self.layout = QtWidgets.QVBoxLayout(self)
         self.layout.addWidget(self.appSelector)
-        self.layout.addWidget(self.urlbar)
         self.layout.addWidget(self.button)
 
         self.button.clicked.connect(self.magic)
 
     @QtCore.Slot()
     def magic(self):
-        url = self.urlbar.text()
-        print(url)
-        self.browser = WebAppBrowser(url)
-        self.browser.resize(800, 600)
-        self.browser.show()
+        self.add_dialog = AddWAPDialog()
+        self.add_dialog.resize(800, 600)
+        self.add_dialog.show()
 
 
 if __name__ == "__main__":
+    QtCore.QCoreApplication.setOrganizationName("RasmusRendal")
+    QtCore.QCoreApplication.setApplicationName("Webappifier")
+    app = QtWidgets.QApplication([])
+    initDB()
     parser = argparse.ArgumentParser("Webapp fun")
     parser.add_argument("--app", dest='app', nargs='?', help='Title of webapp to launch')
     args = parser.parse_args()
-    app = QtWidgets.QApplication([])
     signal.signal(signal.SIGINT, signal.SIG_DFL)
     if args.app != None:
-        webAppTitle = args.app
-        selectedWebApp = None
-        print("Searching for " + args.app)
-        for webapp in apps:
-            if webapp.title == webAppTitle:
-                selectedWebApp = webapp
-                break
-        if selectedWebApp == None:
-            raise Exception("Unknown app selected")
+        selectedWebApp = getWebapp(args.app)
         widget = WebAppBrowser(selectedWebApp)
         widget.show()
         sys.exit(app.exec_())
