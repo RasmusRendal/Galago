@@ -1,0 +1,11 @@
+QPushButton { 
+	background-color: #93aca7;
+	border: none;
+	padding: 12px;
+	margin: 24px;
+	font: bold 14px;
+	color: #37483e;
+}
+
+#MainWindow { background-color: #eaf0ed }
+

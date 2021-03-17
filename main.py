@@ -6,15 +6,18 @@ import signal
 from src.webappmanager import initDB, getWebapps, getWebapp, addWebApp
 from src.webappBrowser import WebAppBrowser
 
-
 class AppSelector(QtWidgets.QWidget):
     def __init__(self, apps):
         super().__init__()
+        self.setObjectName("appSelector")
         self.apps = apps
         self.layout = QtWidgets.QGridLayout(self)
         self.app_buttons = []
         for app in self.apps:
-            button = QtWidgets.QPushButton(app.title)
+            button = QtWidgets.QToolButton()
+            button.setText(app.title)
+            button.setIcon(QtGui.QIcon("resources/logo-rounded.png"))
+            button.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
             self.layout.addWidget(button)
             def start():
                 self.browser = WebAppBrowser(app)
@@ -55,6 +58,7 @@ class AddWAPDialog(QtWidgets.QWidget):
 class MainWindow(QtWidgets.QWidget):
     def __init__(self):
         super().__init__()
+        self.setObjectName("MainWindow")
 
         self.button = QtWidgets.QPushButton("Add WAP!")
         self.appSelector = AppSelector(getWebapps())
@@ -85,6 +89,10 @@ if __name__ == "__main__":
     QtCore.QCoreApplication.setOrganizationName("RasmusRendal")
     QtCore.QCoreApplication.setApplicationName("Webappifier")
     app = QtWidgets.QApplication([])
+    stylesheet_file = open("stylesheet.css", "r")
+    stylesheet = stylesheet_file.read()
+    stylesheet_file.close()
+    app.setStyleSheet(stylesheet)
     initDB()
     parser = argparse.ArgumentParser("Webapp fun")
     parser.add_argument("--app", dest='app', nargs='?', help='Title of webapp to launch')
