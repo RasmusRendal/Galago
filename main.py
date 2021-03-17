@@ -1,21 +1,10 @@
 #!/usr/bin/env python3
 import sys
-from PySide2 import QtCore, QtWidgets, QtGui, QtWebEngineWidgets
+from PySide2 import QtCore, QtWidgets, QtGui
 import argparse
 import signal
 from src.webappmanager import initDB, getWebapps, getWebapp, addWebApp
-
-
-class WebAppBrowser(QtWidgets.QWidget):
-    def __init__(self, webapp):
-        super().__init__()
-        self.webapp = webapp
-        self.view = QtWebEngineWidgets.QWebEngineView()
-        self.view.load(QtCore.QUrl(self.webapp.url))
-        self.layout = QtWidgets.QVBoxLayout(self)
-        self.layout.addWidget(self.view)
-        self.layout.setContentsMargins(QtCore.QMargins(0, 0, 0, 0))
-        print("started")
+from src.webappBrowser import WebAppBrowser
 
 
 class AppSelector(QtWidgets.QWidget):
@@ -41,11 +30,14 @@ class AddWAPDialog(QtWidgets.QWidget):
         self.titleField = QtWidgets.QLineEdit()
         self.urlField = QtWidgets.QLineEdit()
         self.button = QtWidgets.QPushButton("Add Webapp")
-        self.layout = QtWidgets.QVBoxLayout(self)
-        self.layout.addWidget(self.nameField)
-        self.layout.addWidget(self.titleField)
-        self.layout.addWidget(self.urlField)
+        self.layout = QtWidgets.QFormLayout(self)
+        self.layout.addRow("ID:", self.nameField)
+        self.layout.addRow("Title:", self.titleField)
+        self.layout.addRow("URL:", self.urlField)
         self.layout.addWidget(self.button)
+        self.nameField.returnPressed.connect(self.add_wap)
+        self.titleField.returnPressed.connect(self.add_wap)
+        self.urlField.returnPressed.connect(self.add_wap)
         self.button.clicked.connect(self.add_wap)
 
     @QtCore.Slot()
@@ -53,8 +45,8 @@ class AddWAPDialog(QtWidgets.QWidget):
         wap_id = self.nameField.text()
         title = self.titleField.text()
         url = self.urlField.text()
-        addWebApp(wap_id, title, url)
-        print("added")
+        wap = addWebApp(wap_id, title, url)
+        WebAppBrowser(wap)
         self.close()
 
 
