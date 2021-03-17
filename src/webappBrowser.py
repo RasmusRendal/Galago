@@ -6,7 +6,14 @@ class WebAppBrowser(QtWidgets.QWidget):
     def __init__(self, webapp):
         super().__init__()
         self.webapp = webapp
+        self.profile = None
+        if self.webapp.persist:
+            self.profile = QtWebEngineWidgets.QWebEngineProfile(webapp.id)
+        else:
+            self.profile = QtWebEngineWidgets.QWebEngineProfile()
+        self.page = QtWebEngineWidgets.QWebEnginePage(self.profile)
         self.view = QtWebEngineWidgets.QWebEngineView()
+        self.view.setPage(self.page)
         self.view.load(QtCore.QUrl(self.webapp.url))
         self.layout = QtWidgets.QVBoxLayout(self)
         self.layout.addWidget(self.view)

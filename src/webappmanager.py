@@ -3,11 +3,12 @@ import os, sys
 
 # Should only be instantiated from here
 class WebApp:
-    def __init__(self, wap_id, title, url, icon_path):
+    def __init__(self, wap_id, title, url, icon_path, persist):
         self.id = wap_id
         self.title = title
         self.url = url
         self.icon_path = icon_path
+        self.persist = persist
 
 def initDB():
     path = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.AppDataLocation)
@@ -17,29 +18,27 @@ def initDB():
     database.setDatabaseName(path + "/webappifierdb.db")
     if not database.open():
         raise Exception("Database not working: " + database.lastError().driverText())
-    query = QtSql.QSqlQuery("CREATE TABLE IF NOT EXISTS webapps (id TEXT PRIMARY KEY, title TEXT, url TEXT, icon_path TEXT);")
+    query = QtSql.QSqlQuery("CREATE TABLE IF NOT EXISTS webapps (id TEXT PRIMARY KEY, title TEXT, url TEXT, icon_path TEXT, persist INTEGER);")
     query.exec_()
 
 def getWebapps():
-    query = QtSql.QSqlQuery("SELECT id, title, url, icon_path FROM webapps;")
+    query = QtSql.QSqlQuery("SELECT id, title, url, icon_path, persist FROM webapps;")
     apps = []
     while query.next():
         wap_id = query.value(0)
         title = query.value(1)
         url = query.value(2)
         icon_path = query.value(3)
-        print("Getting: " + icon_path)
-        apps.append(WebApp(wap_id, title, url, icon_path))
+        persist = query.value(4) == 1
+        apps.append(WebApp(wap_id, title, url, icon_path, persist))
     return apps
 
 
 def getWebapp(wap_id):
-    selectedWebApp = None
     apps = getWebapps()
     for webapp in apps:
         if webapp.id == wap_id:
             return webapp
-            break
     raise Exception("Webapp " + wap_id + " not found")
 
 desktopEntryTemplate = """[Desktop Entry]
@@ -62,8 +61,6 @@ def updateDesktopEntry(wap):
 
 def updateIcon(wap_id, icon_path):
     query = QtSql.QSqlQuery()
-    print("Setting for: " + wap_id)
-    print("setting to: " + icon_path)
     query.prepare("UPDATE webapps SET icon_path = :icon_path WHERE id = :id;")
     query.bindValue(":icon_path", icon_path)
     query.bindValue(":id", wap_id)
@@ -79,7 +76,6 @@ def addWebApp(wap_id, title, url):
     query.bindValue(":url", url)
     query.bindValue(":icon_path", "gpodder")
     query.exec_()
-    apps = getWebapps()
-    wap = WebApp(wap_id, title, url, "gpodder")
+    wap = WebApp(wap_id, title, url, "gpodder", False)
     updateDesktopEntry(wap)
     return wap
