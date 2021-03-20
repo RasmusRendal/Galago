@@ -28,6 +28,7 @@ class WebAppBrowser(QtWidgets.QWidget):
         if not os.path.exists(path):
             os.makedirs(path)
         icon_path = path + self.webapp.id + ".png"
+        if not os.path.isfile(icon_path):
+            updateIcon(self.webapp.id, icon_path)
         pixmap.save(icon_path)
-        updateIcon(self.webapp.id, icon_path)
         self.view.iconChanged.disconnect(self.iconChangedListener)
