@@ -9,6 +9,27 @@ class WebApp:
         self.icon_path = icon_path
         self.persist = True
 
+
+def migrate():
+    versionQuery = QtSql.QSqlQuery("SELECT version FROM version;")
+    if not versionQuery.exec_():
+        raise Exception("Version selection failed")
+    version = 0
+    if versionQuery.first():
+        version = versionQuery.value(0)
+    else:
+        versionZeroQuery = QtSql.QSqlQuery("INSERT INTO version (version, id) VALUES (0, 0);")
+        versionZeroQuery.exec_()
+    if version == 0:
+        print("Migrating from version 0 to 1")
+        query = QtSql.QSqlQuery("CREATE TABLE webapps (title TEXT PRIMARY KEY, url TEXT, icon_path TEXT);")
+        query.exec_()
+
+    updateVersion = QtSql.QSqlQuery()
+    updateVersion.prepare("UPDATE version SET version = :version;")
+    updateVersion.bindValue(":version", 1)
+    updateVersion.exec_()
+
 def initDB():
     path = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.AppDataLocation)
     if not os.path.exists(path):
@@ -17,8 +38,10 @@ def initDB():
     database.setDatabaseName(path + "/webappifierdb.db")
     if not database.open():
         raise Exception("Database not working: " + database.lastError().driverText())
-    query = QtSql.QSqlQuery("CREATE TABLE IF NOT EXISTS webapps (title TEXT PRIMARY KEY, url TEXT, icon_path TEXT);")
+    # The ID is just a clever way to ensure only one row in the version table
+    query = QtSql.QSqlQuery("CREATE TABLE IF NOT EXISTS version (version INTEGER, id INTEGER PRIMARY KEY CHECK (id = 0));")
     query.exec_()
+    migrate()
 
 def getWebapps():
     query = QtSql.QSqlQuery("SELECT title, url, icon_path FROM webapps;")
