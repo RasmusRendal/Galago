@@ -35,7 +35,7 @@ def initDB():
     if not os.path.exists(path):
         os.makedirs(path)
     database = QtSql.QSqlDatabase.addDatabase("QSQLITE")
-    database.setDatabaseName(path + "/webappifierdb.db")
+    database.setDatabaseName(path + "/galagodb.db")
     if not database.open():
         raise Exception("Database not working: " + database.lastError().driverText())
     # The ID is just a clever way to ensure only one row in the version table
@@ -69,14 +69,14 @@ Type=Application
 Exec={0} --app {1}
 Name={1}
 Icon={2}
-StartupWMClass=webappifier
+StartupWMClass=Galago
 Terminal=false
 """
 
 def updateDesktopEntry(wap):
     main_file = os.path.realpath(sys.modules['__main__'].__file__)
     desktopEntryContent = desktopEntryTemplate.format(main_file, wap.title, wap.icon_path)
-    path = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.ApplicationsLocation) + "/webappifier-" + wap.title + ".desktop"
+    path = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.ApplicationsLocation) + "/galago-" + wap.title + ".desktop"
     desktop_file = open(path, "wt")
     desktop_file.write(desktopEntryContent)
     desktop_file.close()
@@ -96,9 +96,9 @@ def addWebApp(title, url):
     query.prepare("INSERT INTO webapps (title, url, icon_path) VALUES (:title, :url, :icon_path);")
     query.bindValue(":title", title)
     query.bindValue(":url", url)
-    query.bindValue(":icon_path", "gpodder")
+    query.bindValue(":icon_path", "galago")
     query.exec_()
     apps = getWebapps()
-    wap = WebApp(title, url, "gpodder")
+    wap = WebApp(title, url, "galago")
     updateDesktopEntry(wap)
     return wap

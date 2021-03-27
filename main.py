@@ -108,7 +108,7 @@ class MainWindow(QtWidgets.QWidget):
 
 if __name__ == "__main__":
     QtCore.QCoreApplication.setOrganizationName("RasmusRendal")
-    QtCore.QCoreApplication.setApplicationName("Webappifier")
+    QtCore.QCoreApplication.setApplicationName("Galago")
     app = QtWidgets.QApplication([])
     stylesheet_file = open("stylesheet.css", "r")
     stylesheet = stylesheet_file.read()
