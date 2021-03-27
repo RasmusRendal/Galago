@@ -1,0 +1,30 @@
+QPushButton { 
+	background-color: #93aca7;
+	border: none;
+	padding: 12px;
+	margin: 24px;
+	font: bold 14px;
+	color: #37483e;
+}
+
+QPushButton#appButton {
+	background-color: lightgray;
+	background-repeat: no-repeat;
+	background-position: center;
+	background-origin: content;
+	margin: 0px;
+	padding: 0px;
+	border-radius: 12px;
+}
+
+QToolButton {
+	background-color: none;
+	border: none;
+	font: 20px;
+	color: #37483e;
+	line-height: 50px;
+}
+
+#MainWindow { 
+	background-color: #eaf0ed;
+}
