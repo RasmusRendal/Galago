@@ -105,12 +105,12 @@ class MainWindow(QtWidgets.QWidget):
         self.layout.replaceWidget(oldAppSelector, self.appSelector)
 
 
-
 if __name__ == "__main__":
+    import pathlib
     QtCore.QCoreApplication.setOrganizationName("RasmusRendal")
     QtCore.QCoreApplication.setApplicationName("Galago")
     app = QtWidgets.QApplication([])
-    stylesheet_file = open("stylesheet.css", "r")
+    stylesheet_file = open(pathlib.Path(__file__).parent.absolute() / "stylesheet.css", "r")
     stylesheet = stylesheet_file.read()
     stylesheet_file.close()
     app.setStyleSheet(stylesheet)
