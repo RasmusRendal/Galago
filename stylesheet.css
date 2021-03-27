@@ -7,6 +7,16 @@ QPushButton {
 	color: #37483e;
 }
 
+QPushButton#appButton {
+	background-color: lightgray;
+	background-repeat: no-repeat;
+	background-position: center;
+	background-origin: content;
+	margin: 0px;
+	padding: 0px;
+	border-radius: 12px;
+}
+
 QToolButton {
 	background-color: none;
 	border: none;

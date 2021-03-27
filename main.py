@@ -11,11 +11,19 @@ class AppWidget(QtWidgets.QVBoxLayout):
         super().__init__()
         self.app = app
         self.button = QtWidgets.QPushButton()
-        self.button.setIcon(QtGui.QIcon(app.icon_path))
-        #self.button.clicked.connect(self.launch)
-        self.addWidget(self.button)
+        self.button.size = 100
+        self.button.setFixedSize(QtCore.QSize(self.button.size,self.button.size))
+        self.button.setObjectName("appButton")
+        icon = QtGui.QIcon(app.icon_path)
+        if icon.pixmap(256, 256).size().height() < self.button.size:
+            self.button.setStyleSheet('QPushButton#appButton { background-image: url("' + app.icon_path + '"); }')
+        else:
+            self.button.setStyleSheet('QPushButton#appButton {border-image: url("' + app.icon_path + '") 0 0 0 0 stretch stretch; }')
+        self.button.clicked.connect(self.launch)
+        self.addWidget(self.button, alignment=QtGui.Qt.AlignCenter)
         self.label = QtWidgets.QLabel()
         self.label.setText(app.title)
+        self.label.setAlignment(QtGui.Qt.AlignCenter)
         self.addWidget(self.label)
 
     @QtCore.Slot()
