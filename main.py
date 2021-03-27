@@ -11,7 +11,7 @@ class AppWidget(QtWidgets.QVBoxLayout):
         super().__init__()
         self.app = app
         self.button = QtWidgets.QPushButton()
-        self.button.size = 100
+        self.button.size = 64
         self.button.setFixedSize(QtCore.QSize(self.button.size,self.button.size))
         self.button.setObjectName("appButton")
         icon = QtGui.QIcon(app.icon_path)
@@ -37,14 +37,18 @@ class AppSelector(QtWidgets.QWidget):
         super().__init__()
         self.setObjectName("appSelector")
         self.apps = apps
-        self.layout = QtWidgets.QGridLayout(self)
+        self.layout = QtWidgets.QVBoxLayout(self)
+        self.gridlayout = QtWidgets.QGridLayout()
+        self.layout.addLayout(self.gridlayout)
         self.app_buttons = []
-        counter = 0
-        for app in self.apps:
+        for i in range(len(self.apps)):
+            app = self.apps[i]
             button = AppWidget(app)
-            self.layout.addLayout(button,counter//4,counter%4,alignment=QtCore.Qt.AlignTop)
+            self.gridlayout.addLayout(button,i//4,i%4,alignment=QtCore.Qt.AlignTop)
             self.app_buttons.append(button)
-            counter += 1
+        for i in range(self.gridlayout.columnCount()):
+            self.gridlayout.setColumnStretch(i, 1)
+        self.layout.addStretch()
 
 
 class AddWAPDialog(QtWidgets.QWidget):
