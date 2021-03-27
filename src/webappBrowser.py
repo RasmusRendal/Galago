@@ -8,7 +8,7 @@ class WebAppBrowser(QtWidgets.QWidget):
         self.webapp = webapp
         self.profile = None
         if self.webapp.persist:
-            self.profile = QtWebEngineWidgets.QWebEngineProfile(webapp.id)
+            self.profile = QtWebEngineWidgets.QWebEngineProfile(webapp.title)
         else:
             self.profile = QtWebEngineWidgets.QWebEngineProfile()
         self.page = QtWebEngineWidgets.QWebEnginePage(self.profile)
@@ -27,8 +27,8 @@ class WebAppBrowser(QtWidgets.QWidget):
         path = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.AppDataLocation) + "/icons/"
         if not os.path.exists(path):
             os.makedirs(path)
-        icon_path = path + self.webapp.id + ".png"
+        icon_path = path + self.webapp.title + ".png"
         if not os.path.isfile(icon_path):
-            updateIcon(self.webapp.id, icon_path)
+            updateIcon(self.webapp.title, icon_path)
         pixmap.save(icon_path)
         self.view.iconChanged.disconnect(self.iconChangedListener)
