@@ -7,5 +7,14 @@ QPushButton {
 	color: #37483e;
 }
 
-#MainWindow { background-color: #eaf0ed }
+QToolButton {
+	background-color: none;
+	border: none;
+	font: 20px;
+	color: #37483e;
+	line-height: 50px;
+}
 
+#MainWindow { 
+	background-color: #eaf0ed;
+}

@@ -6,6 +6,24 @@ import signal
 from src.webappmanager import initDB, getWebapps, getWebapp, addWebApp
 from src.webappBrowser import WebAppBrowser
 
+class AppWidget(QtWidgets.QVBoxLayout):
+    def __init__(self, app):
+        super().__init__()
+        self.app = app
+        self.button = QtWidgets.QPushButton()
+        self.button.setIcon(QtGui.QIcon(app.icon_path))
+        #self.button.clicked.connect(self.launch)
+        self.addWidget(self.button)
+        self.label = QtWidgets.QLabel()
+        self.label.setText(app.title)
+        self.addWidget(self.label)
+
+    @QtCore.Slot()
+    def launch(self):
+        self.browser = WebAppBrowser(self.app)
+        self.browser.show()
+
+
 class AppSelector(QtWidgets.QWidget):
     def __init__(self, apps):
         super().__init__()
@@ -13,17 +31,12 @@ class AppSelector(QtWidgets.QWidget):
         self.apps = apps
         self.layout = QtWidgets.QGridLayout(self)
         self.app_buttons = []
+        counter = 0
         for app in self.apps:
-            button = QtWidgets.QToolButton()
-            button.setText(app.title)
-            button.setIcon(QtGui.QIcon("resources/logo-rounded.png"))
-            button.setToolButtonStyle(QtCore.Qt.ToolButtonTextUnderIcon)
-            self.layout.addWidget(button)
-            def start():
-                self.browser = WebAppBrowser(app)
-                self.browser.show()
-            button.clicked.connect(start)
+            button = AppWidget(app)
+            self.layout.addLayout(button,counter//4,counter%4,alignment=QtCore.Qt.AlignTop)
             self.app_buttons.append(button)
+            counter += 1
 
 
 class AddWAPDialog(QtWidgets.QWidget):
