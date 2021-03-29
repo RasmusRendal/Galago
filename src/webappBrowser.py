@@ -23,12 +23,5 @@ class WebAppBrowser(QtWidgets.QWidget):
 
     @QtCore.Slot()
     def iconChangedListener(self, icon):
-        pixmap = icon.pixmap(256, 256)
-        path = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.AppDataLocation) + "/icons/"
-        if not os.path.exists(path):
-            os.makedirs(path)
-        icon_path = path + self.webapp.title + ".png"
-        if not os.path.isfile(icon_path):
-            updateIcon(self.webapp.title, icon_path)
-        pixmap.save(icon_path)
+        updateIcon(self.webapp.title, icon)
         self.view.iconChanged.disconnect(self.iconChangedListener)

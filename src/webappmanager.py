@@ -1,5 +1,6 @@
 from PySide2 import QtSql, QtCore
 import os, sys
+import pathlib
 
 # Should only be instantiated from here
 class WebApp:
@@ -50,7 +51,11 @@ def getWebapps():
         title = query.value(0)
         url = query.value(1)
         icon_path = query.value(2)
-        print("Getting: " + icon_path)
+        if icon_path != "galago" and not os.path.isfile(icon_path):
+            updateIcon(title, "galago")
+            icon_path = "galago"
+        if icon_path == "galago":
+            icon_path = str(pathlib.Path(__file__).parent.parent / "resources/logo-rounded.png")
         apps.append(WebApp(title, url, icon_path))
     return apps
 
@@ -77,19 +82,31 @@ def updateDesktopEntry(wap):
     main_file = os.path.realpath(sys.modules['__main__'].__file__)
     desktopEntryContent = desktopEntryTemplate.format(main_file, wap.title, wap.icon_path)
     path = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.ApplicationsLocation) + "/galago-" + wap.title + ".desktop"
-    desktop_file = open(path, "wt")
-    desktop_file.write(desktopEntryContent)
-    desktop_file.close()
+    # If the data is already there, don't change the file
+    if os.path.isfile(path):
+        with open(path, "rt") as desktop_file:
+            data = desktop_file.read()
+            if data == desktopEntryContent:
+                return
+    with open(path, "wt") as desktop_file:
+        desktop_file.write(desktopEntryContent)
+        print("Updated desktop entry")
 
 
-def updateIcon(title, icon_path):
+def updateIcon(title, icon):
+    pixmap = icon.pixmap(256, 256)
+    path = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.AppDataLocation) + "/icons/"
+    if not os.path.exists(path):
+        os.makedirs(path)
+    icon_path = path + title + ".png"
+    pixmap.save(icon_path)
+    updateDesktopEntry(getWebapp(title))
     query = QtSql.QSqlQuery()
     query.prepare("UPDATE webapps SET icon_path = :icon_path WHERE title = :title;")
     query.bindValue(":icon_path", icon_path)
     query.bindValue(":title", title)
     if not query.exec_():
         raise Exception("Query failed: " + query.lastError().driverText())
-    updateDesktopEntry(getWebapp(title))
 
 def addWebApp(title, url):
     query = QtSql.QSqlQuery()
