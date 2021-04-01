@@ -3,12 +3,32 @@ import sys
 from PySide2 import QtCore, QtWidgets, QtGui
 import argparse
 import signal
-from src.webappmanager import initDB, getWebapps, getWebapp, addWebApp
+from src.webappmanager import initDB, getWebapps, getWebapp, addWebApp, deleteWebApp
 from src.webappBrowser import WebAppBrowser
 
-class AppWidget(QtWidgets.QVBoxLayout):
-    def __init__(self, app):
+class AppSettings(QtWidgets.QWidget):
+    deleted = QtCore.Signal()
+    def __init__(self, app_widget, app):
         super().__init__()
+        self.app_widget = app_widget
+        self.app = app
+        self.deleteButton = QtWidgets.QPushButton("Delete " + app.title)
+        self.deleteButton.clicked.connect(self.delete)
+        self.layout = QtWidgets.QVBoxLayout(self)
+        self.layout.addWidget(self.deleteButton)
+
+    @QtCore.Slot()
+    def delete(self):
+        deleteWebApp(self.app)
+        self.deleted.emit()
+        self.close()
+
+
+class AppWidget(QtWidgets.QVBoxLayout):
+    browser = None
+    deleted = QtCore.Signal()
+    def __init__(self, parent, app):
+        super().__init__(parent)
         self.app = app
         self.button = QtWidgets.QPushButton()
         self.button.size = 64
@@ -19,22 +39,41 @@ class AppWidget(QtWidgets.QVBoxLayout):
             self.button.setStyleSheet('QPushButton#appButton { background-image: url("' + app.icon_path + '"); }')
         else:
             self.button.setStyleSheet('QPushButton#appButton {border-image: url("' + app.icon_path + '") 0 0 0 0 stretch stretch; }')
-        self.button.clicked.connect(self.launch)
         self.addWidget(self.button, alignment=QtGui.Qt.AlignCenter)
         self.label = QtWidgets.QLabel()
         self.label.setText(app.title)
         self.label.setAlignment(QtGui.Qt.AlignCenter)
         self.addWidget(self.label)
+        self.button.installEventFilter(self)
+
+    def eventFilter(self, source, e) -> bool:
+        if isinstance(e, QtGui.QMouseEvent) and e.type() == QtCore.QEvent.Type.MouseButtonRelease:
+            if e.button() == QtCore.Qt.MouseButton.RightButton:
+                self.settings()
+            elif e.button() == QtCore.Qt.MouseButton.LeftButton:
+                self.launch()
+            return True
+        return False
 
     @QtCore.Slot()
     def launch(self):
+        # Eventually, maybe have a list of launched browsers?
+        if self.browser != None:
+            return
         self.browser = WebAppBrowser(self.app)
         self.browser.show()
 
+    @QtCore.Slot()
+    def settings(self):
+        self.settingsWindow = AppSettings(self, self.app)
+        self.settingsWindow.show()
+        self.settingsWindow.deleted.connect(self.deleted)
+
 
 class AppSelector(QtWidgets.QWidget):
-    def __init__(self, apps):
-        super().__init__()
+    refreshPending = QtCore.Signal()
+    def __init__(self, parent, apps):
+        super().__init__(parent)
         self.setObjectName("appSelector")
         self.apps = apps
         self.layout = QtWidgets.QVBoxLayout(self)
@@ -43,12 +82,17 @@ class AppSelector(QtWidgets.QWidget):
         self.app_buttons = []
         for i in range(len(self.apps)):
             app = self.apps[i]
-            button = AppWidget(app)
+            button = AppWidget(self, app)
+            button.deleted.connect(self.refresh)
             self.gridlayout.addLayout(button,i//4,i%4,alignment=QtCore.Qt.AlignTop)
             self.app_buttons.append(button)
         for i in range(self.gridlayout.columnCount()):
             self.gridlayout.setColumnStretch(i, 1)
         self.layout.addStretch()
+
+    @QtCore.Slot()
+    def refresh(self):
+        self.refreshPending.emit()
 
 
 class AddWAPDialog(QtWidgets.QWidget):
@@ -82,7 +126,8 @@ class MainWindow(QtWidgets.QWidget):
         self.setObjectName("MainWindow")
 
         self.button = QtWidgets.QPushButton("Add WAP!")
-        self.appSelector = AppSelector(getWebapps())
+        self.appSelector = AppSelector(self, getWebapps())
+        self.appSelector.refreshPending.connect(self.refresh)
 
         self.layout = QtWidgets.QVBoxLayout(self)
         self.layout.addWidget(self.appSelector)
@@ -100,7 +145,8 @@ class MainWindow(QtWidgets.QWidget):
     @QtCore.Slot()
     def refresh(self):
         oldAppSelector = self.appSelector
-        self.appSelector = AppSelector(getWebapps())
+        self.appSelector = AppSelector(self, getWebapps())
+        self.appSelector.refreshPending.connect(self.refresh)
         oldAppSelector.deleteLater()
         self.layout.replaceWidget(oldAppSelector, self.appSelector)
 
