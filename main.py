@@ -5,6 +5,7 @@ import argparse
 import signal
 from src.webappmanager import initDB, getWebapps, getWebapp, addWebApp, deleteWebApp
 from src.webappBrowser import WebAppBrowser
+from datetime import datetime, timedelta
 
 class AppSettings(QtWidgets.QWidget):
     deleted = QtCore.Signal()
@@ -27,6 +28,7 @@ class AppSettings(QtWidgets.QWidget):
 class AppWidget(QtWidgets.QVBoxLayout):
     browser = None
     deleted = QtCore.Signal()
+    pressStarted = None
     def __init__(self, parent, app):
         super().__init__(parent)
         self.app = app
@@ -47,12 +49,17 @@ class AppWidget(QtWidgets.QVBoxLayout):
         self.button.installEventFilter(self)
 
     def eventFilter(self, source, e) -> bool:
-        if isinstance(e, QtGui.QMouseEvent) and e.type() == QtCore.QEvent.Type.MouseButtonRelease:
-            if e.button() == QtCore.Qt.MouseButton.RightButton:
-                self.settings()
-            elif e.button() == QtCore.Qt.MouseButton.LeftButton:
-                self.launch()
-            return True
+        if isinstance(e, QtGui.QMouseEvent):
+            if e.type() == QtCore.QEvent.Type.MouseButtonPress:
+                self.pressStarted = datetime.now()
+            if e.type() == QtCore.QEvent.Type.MouseButtonRelease:
+                time_elapsed = datetime.now() - self.pressStarted
+                print(time_elapsed)
+                if time_elapsed > timedelta(seconds=1):
+                    self.settings()
+                else:
+                    self.launch()
+                return True
         return False
 
     @QtCore.Slot()
