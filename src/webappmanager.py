@@ -44,6 +44,9 @@ def initDB():
     query.exec_()
     migrate()
 
+def default_icon() -> str:
+    return str(pathlib.Path(__file__).parent.parent / "resources/logo-rounded.png")
+
 def getWebapps():
     query = QtSql.QSqlQuery("SELECT title, url, icon_path FROM webapps;")
     apps = []
@@ -55,7 +58,7 @@ def getWebapps():
             updateIcon(title, "galago")
             icon_path = "galago"
         if icon_path == "galago":
-            icon_path = str(pathlib.Path(__file__).parent.parent / "resources/logo-rounded.png")
+            icon_path = default_icon()
         apps.append(WebApp(title, url, icon_path))
     return apps
 
@@ -78,10 +81,14 @@ StartupWMClass=Galago
 Terminal=false
 """
 
+def desktopEntryLocation(title: str) -> str:
+    return QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.ApplicationsLocation) + "/galago-" + title + ".desktop"
+
+
 def updateDesktopEntry(wap):
     main_file = os.path.realpath(sys.modules['__main__'].__file__)
     desktopEntryContent = desktopEntryTemplate.format(main_file, wap.title, wap.icon_path)
-    path = QtCore.QStandardPaths.writableLocation(QtCore.QStandardPaths.ApplicationsLocation) + "/galago-" + wap.title + ".desktop"
+    path = desktopEntryLocation(wap.title)
     # If the data is already there, don't change the file
     if os.path.isfile(path):
         with open(path, "rt") as desktop_file:
@@ -119,3 +126,14 @@ def addWebApp(title, url):
     wap = WebApp(title, url, "galago")
     updateDesktopEntry(wap)
     return wap
+
+def deleteWebApp(app: WebApp):
+    query = QtSql.QSqlQuery()
+    query.prepare("DELETE FROM webapps WHERE title=:title;")
+    query.bindValue(":title", app.title)
+    assert query.exec_()
+    desktopEntry = desktopEntryLocation(app.title)
+    if os.path.isfile(desktopEntry):
+        os.remove(desktopEntry)
+    if os.path.isfile(app.icon_path) and app.icon_path != default_icon():
+        os.remove(app.icon_path)
