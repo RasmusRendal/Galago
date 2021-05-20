@@ -74,7 +74,7 @@ def getWebapp(title):
 
 desktopEntryTemplate = """[Desktop Entry]
 Type=Application
-Exec={0} --app {1}
+Exec={0} --app "{1}"
 Name={1}
 Icon={2}
 StartupWMClass=Galago
